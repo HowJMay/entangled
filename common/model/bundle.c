@@ -95,15 +95,25 @@ static retcode_t validate_signatures(bundle_transactions_t const *const bundle, 
 
 void bundle_transactions_new(bundle_transactions_t **const bundle) { utarray_new(*bundle, &bundle_transactions_icd); }
 
-void bundle_transactions_free(bundle_transactions_t **const bundle) {
+retcode_t bundle_transactions_free(bundle_transactions_t **const bundle) {
+  if (!bundle || !*bundle) {
+    return RC_NULL_PARAM;
+  }
+
   if (bundle && *bundle) {
     utarray_free(*bundle);
   }
   *bundle = NULL;
+  return RC_OK;
 }
 
-void bundle_transactions_add(bundle_transactions_t *const bundle, iota_transaction_t const *const transaction) {
+retcode_t bundle_transactions_add(bundle_transactions_t *const bundle, iota_transaction_t const *const transaction) {
+  if (!bundle || !transaction) {
+    return RC_NULL_PARAM;
+  }
+
   utarray_push_back(bundle, transaction);
+  return RC_OK;
 }
 
 void bundle_calculate_hash(bundle_transactions_t *bundle, Kerl *const kerl, flex_trit_t *out) {
@@ -139,6 +149,9 @@ void bundle_finalize(bundle_transactions_t *bundle, Kerl *const kerl) {
   flex_trit_t bundle_hash[FLEX_TRIT_SIZE_243];
 
   head_tx = (iota_transaction_t *)utarray_front(bundle);
+  if (!head_tx) {
+    return;
+  }
   flex_trits_to_trits(increased_tag_trits, NUM_TRITS_TAG, transaction_obsolete_tag(head_tx), NUM_TRITS_TAG,
                       NUM_TRITS_TAG);
   while (!valid_bundle) {
@@ -180,6 +193,10 @@ retcode_t bundle_validate(bundle_transactions_t *const bundle, bundle_status_t *
   }
 
   curr_tx = (iota_transaction_t *)utarray_eltptr(bundle, 0);
+  if (!curr_tx) {
+    *status = BUNDLE_INCOMPLETE;
+    return res;
+  }
   last_index = transaction_last_index(curr_tx);
 
   if (utarray_len(bundle) != last_index + 1) {
