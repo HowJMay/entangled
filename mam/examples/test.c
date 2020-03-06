@@ -20,21 +20,12 @@ int main(int ac, char **av) {
 
   char *host = "node1.puyuma.org";
   char *port = "14265";
-  char *SEED = "JDTHZZRZTIBZDYVACFOFLNBSPTIAJBQREXPMLUQPFSPHJLZPG9WCAZTISFDPQ9QUOWVGCKNGJANYUAXOC";
-  char *payload = "ThisIsNotMessegaNaYo";  
-
-  if (ac != 6) {
-    fprintf(stderr, "usage: send-msg <host> <port> <seed> <payload> <last_packet>\n");
-    return EXIT_FAILURE;
-  }
-
-  if (strcmp(av[5], "yes") && strcmp(av[5], "no")) {
-    fprintf(stderr, "Arg <last_packet> should be \"yes\" or \"no\" only\n");
-    return EXIT_FAILURE;
-  }
+  char *seed = "JDTHZZRZTIBZDYVACFOFLNBSPTIAJBQREXPMLUQPFSPHJLZPG9WCAZTISFDPQ9QUOWVGCKNGJANYUAXOC";
+  char *payload1 = "ThisIsNotMessegaNaYo_NUM_1";  
+  char *payload2 = "ThisIsNotMessegaNaYo_NUM_2";  
 
   // Loading or creating MAM API
-  if ((ret = mam_api_init(&api, (tryte_t *)av[3])) != RC_OK) {
+  if (ret = mam_api_init(&api, seed) != RC_OK) {
       fprintf(stderr, "mam_api_init failed with err %d\n", ret);
       return EXIT_FAILURE;
   }
@@ -57,7 +48,8 @@ int main(int ac, char **av) {
     }
 
     // Writing packet to bundle
-    bool last_packet = strcmp(av[5], "yes") == 0;
+    //bool last_packet = strcmp(av[5], "yes") == 0;
+    bool last_packet = true;
 
     // if (mam_channel_num_remaining_sks(channel) == 0) {
     // TODO
@@ -68,14 +60,66 @@ int main(int ac, char **av) {
     //   return RC_OK;
     // }
 
-    if ((ret = mam_example_write_packet(&api, bundle, av[4], msg_id, last_packet)) != RC_OK) {
+    if ((ret = mam_example_write_packet(&api, bundle, payload1, msg_id, last_packet)) != RC_OK) {
       fprintf(stderr, "mam_example_write_packet failed with err %d\n", ret);
       return EXIT_FAILURE;
     }
   }
 
   // Sending bundle
-  if ((ret = send_bundle(av[1], atoi(av[2]), bundle)) != RC_OK) {
+  if ((ret = send_bundle(host, atoi(port), bundle)) != RC_OK) {
+    fprintf(stderr, "send_bundle failed with err %d\n", ret);
+    return EXIT_FAILURE;
+  }
+
+#if 0
+  // Saving and destroying MAM API
+  if ((ret = mam_api_save(&api, MAM_FILE, NULL, 0)) != RC_OK) {
+    fprintf(stderr, "mam_api_save failed with err %d\n", ret);
+  }
+  if ((ret = mam_api_destroy(&api)) != RC_OK) {
+    fprintf(stderr, "mam_api_destroy failed with err %d\n", ret);
+    return EXIT_FAILURE;
+  }
+#endif 
+
+  // Cleanup
+  bundle_transactions_free(&bundle);
+
+  printf("====================================\n");
+  
+    bundle_transactions_new(&bundle);
+
+  {
+    trit_t msg_id[MAM_MSG_ID_SIZE];
+
+    // Writing header to bundle
+    if ((ret = mam_example_write_header_on_channel(&api, channel_id, bundle, msg_id)) != RC_OK) {
+      fprintf(stderr, "mam_example_write_header failed with err %d\n", ret);
+      return EXIT_FAILURE;
+    }
+
+    // Writing packet to bundle
+    //bool last_packet = strcmp(av[5], "yes") == 0;
+    bool last_packet = true;
+
+    // if (mam_channel_num_remaining_sks(channel) == 0) {
+    // TODO
+    // - remove old ch
+    // - create new ch
+    // - add ch via `mam_api_add_channel`
+
+    //   return RC_OK;
+    // }
+
+    if ((ret = mam_example_write_packet(&api, bundle, payload2, msg_id, last_packet)) != RC_OK) {
+      fprintf(stderr, "mam_example_write_packet failed with err %d\n", ret);
+      return EXIT_FAILURE;
+    }
+  }
+
+  // Sending bundle
+  if ((ret = send_bundle(host, atoi(port), bundle)) != RC_OK) {
     fprintf(stderr, "send_bundle failed with err %d\n", ret);
     return EXIT_FAILURE;
   }
@@ -92,55 +136,6 @@ int main(int ac, char **av) {
   // Cleanup
   bundle_transactions_free(&bundle);
 
-  printf("====================================\n");
-  
-  bundle_transactions_new(&bundle);
-
-  {
-    trit_t msg_id[MAM_MSG_ID_SIZE];
-
-    // Writing header to bundle
-    if ((ret = mam_example_write_header_on_channel(&api, channel_id, bundle, msg_id)) != RC_OK) {
-      fprintf(stderr, "mam_example_write_header failed with err %d\n", ret);
-      return EXIT_FAILURE;
-    }
-
-    // Writing packet to bundle
-    bool last_packet = strcmp(av[5], "yes") == 0;
-
-    // if (mam_channel_num_remaining_sks(channel) == 0) {
-    // TODO
-    // - remove old ch
-    // - create new ch
-    // - add ch via `mam_api_add_channel`
-
-    //   return RC_OK;
-    // }
-
-    if ((ret = mam_example_write_packet(&api, bundle, av[4], msg_id, last_packet)) != RC_OK) {
-      fprintf(stderr, "mam_example_write_packet failed with err %d\n", ret);
-      return EXIT_FAILURE;
-    }
-  }
-
-  // Sending bundle
-  if ((ret = send_bundle(av[1], atoi(av[2]), bundle)) != RC_OK) {
-    fprintf(stderr, "send_bundle failed with err %d\n", ret);
-    return EXIT_FAILURE;
-  }
-
-  // Saving and destroying MAM API
-  if ((ret = mam_api_save(&api, MAM_FILE, NULL, 0)) != RC_OK) {
-    fprintf(stderr, "mam_api_save failed with err %d\n", ret);
-  }
-  if ((ret = mam_api_destroy(&api)) != RC_OK) {
-    fprintf(stderr, "mam_api_destroy failed with err %d\n", ret);
-    return EXIT_FAILURE;
-  }
-
-  // Cleanup
-  { bundle_transactions_free(&bundle); }
-  
 
   return EXIT_SUCCESS;
 }

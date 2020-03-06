@@ -18,13 +18,13 @@ retcode_t mam_example_announce_channel(mam_api_t* const api, tryte_t const* cons
   retcode_t ret = RC_OK;
   tryte_t msg_id_trytes[MAM_MSG_ID_SIZE / NUMBER_OF_TRITS_IN_A_TRYTE];
   mam_psk_t_set_t psks = NULL;
-
+  /*
   if (!mam_psk_t_set_contains(psks, &psk)) {
     if ((ret = mam_psk_t_set_add(&psks, &psk)) != RC_OK) {
       return ret;
     }
   }
-
+  */
   ERR_BIND_RETURN(mam_api_channel_create(api, MAM_EXAMPLES_MSS_HEIGHT, new_channel_id), ret);
 
   if ((ret = mam_api_bundle_announce_channel(api, channel_id, new_channel_id, psks, NULL, bundle, msg_id)) != RC_OK) {
@@ -89,13 +89,13 @@ retcode_t mam_example_write_header_on_channel(mam_api_t* const api, tryte_t cons
   retcode_t ret = RC_OK;
   tryte_t msg_id_trytes[MAM_MSG_ID_SIZE / 3];
   mam_psk_t_set_t psks = NULL;
-
+  /*
   if (!mam_psk_t_set_contains(psks, &psk)) {
     if ((ret = mam_psk_t_set_add(&psks, &psk)) != RC_OK) {
       return ret;
     }
   }
-
+  */
   if ((ret = mam_api_bundle_write_header_on_channel(api, channel_id, psks, NULL, bundle, msg_id)) != RC_OK) {
     return ret;
   }

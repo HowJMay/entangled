@@ -22,6 +22,14 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "test",
+    srcs = ["test.c"],
+    deps = [
+        ":send-common",
+    ],
+)
+
 cc_library(
     name = "send-common",
     srcs = ["send-common.c"],
